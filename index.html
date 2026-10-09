@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>My Fitness Tracker</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f3f4f6;color:#111827}
+header{background:#111827;color:white;padding:22px 18px 18px;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:24px}.sub{opacity:.7;font-size:13px;margin-top:4px}
+.container{max-width:700px;margin:auto;padding:14px 14px 90px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:white;border-radius:16px;padding:15px;box-shadow:0 2px 10px #0000000d;margin-bottom:12px}
+.big{font-size:27px;font-weight:750}.label{font-size:12px;color:#6b7280}.green{color:#059669}.red{color:#dc2626}
+.progress{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:8px}.bar{height:100%;background:#10b981;border-radius:99px}
+button{border:0;border-radius:12px;padding:11px 14px;background:#111827;color:white;font-weight:650;cursor:pointer}button.secondary{background:#e5e7eb;color:#111827}
+input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;margin:5px 0 10px;background:white}.suggestions{display:none;border:1px solid #d1d5db;border-radius:10px;background:white;margin-top:-7px;margin-bottom:10px;overflow:hidden}.suggestions button{display:block;width:100%;text-align:left;background:white;color:#111827;border-radius:0;border-bottom:1px solid #eee;font-weight:500}.suggestions button:last-child{border-bottom:0}.nutrition-preview{background:#ecfdf5;border-radius:10px;padding:10px;margin:8px 0 12px;font-size:13px}
+h2{font-size:17px;margin:2px 0 12px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.item{padding:10px 0;border-bottom:1px solid #eee}.item:last-child{border:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;display:flex;justify-content:center;gap:8px;padding:9px;z-index:10}
+nav button{font-size:12px;padding:9px 12px}
+.hidden{display:none}.muted{color:#6b7280;font-size:13px}.pill{background:#eef2ff;border-radius:99px;padding:4px 8px;font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>My Fitness Tracker</h1><div class="sub">Alimentazione · Allenamento · Peso · Deficit</div></header>
+<div class="container">
+
+<section id="home">
+<div class="grid">
+<div class="card"><div class="label">Peso attuale</div><div class="big" id="weight">—</div><div class="muted">Obiettivo: 100 kg</div></div>
+<div class="card"><div class="label">Calorie oggi</div><div class="big" id="calories">0</div><div class="muted">obiettivo <span id="target">—</span></div></div>
+<div class="card"><div class="label">Proteine</div><div class="big" id="protein">0 g</div></div>
+<div class="card"><div class="label">Consumo giornaliero stimato</div><div class="big" id="tdee">—</div><div class="muted">TDEE</div></div>
+<div class="card"><div class="label">Deficit stimato</div><div class="big green" id="deficit">—</div><div class="muted" id="deficitInfo">rispetto al consumo</div></div>
+</div>
+
+<div class="card">
+<h2>Calorie</h2><div class="progress"><div class="bar" id="calbar" style="width:0%"></div></div>
+<p class="muted" id="caltext">Aggiungi i tuoi pasti per iniziare.</p>
+</div>
+
+<div class="card">
+<h2>Oggi</h2>
+<div id="todayList" class="muted">Nessun dato inserito.</div>
+</div>
+
+<div class="card">
+<h2>Ultime pesate</h2><div id="weightsList" class="muted">Nessuna pesata.</div>
+</div>
+</section>
+
+<section id="food" class="hidden">
+<div class="card"><h2>🍽️ Aggiungi alimento</h2>
+<label>Alimento</label><input id="foodName" placeholder="es. pasta, pollo, yogurt" autocomplete="off">
+<div id="foodSuggestions" class="suggestions"></div>
+<div class="muted">Scrivi il nome: cerco valori nutrizionali indicativi. Per prodotti confezionati puoi scegliere un risultato online.</div>
+<label>Quantità (g)</label><input id="foodQty" type="number" placeholder="100" value="100" min="1">
+<div id="nutritionStatus" class="nutrition-preview">Inserisci un alimento per calcolare calorie e macronutrienti.</div>
+<div class="grid">
+<div><label>Calorie</label><input id="foodCal" type="number"></div>
+<div><label>Proteine (g)</label><input id="foodPro" type="number"></div>
+<div><div><label>Carboidrati (g)</label><input id="foodCarb" type="number"></div></div>
+<div><div><label>Grassi (g)</label><input id="foodFat" type="number"></div></div>
+</div>
+<button onclick="addFood()">Aggiungi alimento</button></div>
+<div class="card"><h2>Alimenti di oggi</h2><div id="foodList"></div></div>
+</section>
+
+<section id="workout" class="hidden">
+<div class="card"><h2>🏋️ Aggiungi allenamento</h2>
+<label>Tipo</label><input id="workType" placeholder="es. circuito, pesi, camminata">
+<div class="grid"><div><label>Durata (min)</label><input id="workMin" type="number"></div>
+<div><label>Calorie stimate</label><input id="workCal" type="number"></div></div>
+<button onclick="addWorkout()">Salva allenamento</button></div>
+<div class="card"><h2>Allenamenti di oggi</h2><div id="workoutList"></div></div>
+</section>
+
+<section id="weightSec" class="hidden">
+<div class="card"><h2>⚖️ Nuova pesata</h2>
+<label>Peso (kg)</label><input id="newWeight" type="number" step="0.1" placeholder="114">
+<button onclick="addWeight()">Salva pesata</button></div>
+<div class="card"><h2>Storico peso</h2><div id="allWeights"></div></div>
+</section>
+
+<section id="settings" class="hidden">
+<div class="card"><h2>⚙️ Profilo e calorie</h2>
+<label>Età</label><input id="age" type="number" placeholder="22">
+<label>Sesso</label><select id="sex"><option value="male">Uomo</option><option value="female">Donna</option></select>
+<label>Altezza (cm)</label><input id="height" type="number" placeholder="180">
+<label>Peso attuale (kg)</label><input id="profileWeight" type="number" step="0.1" placeholder="114">
+<label>Passi medi al giorno</label><input id="steps" type="number" placeholder="10000">
+<label>Allenamenti a settimana</label><input id="trainingDays" type="number" min="0" max="7" placeholder="6">
+<label>Attività lavorativa</label><select id="activity">
+<option value="1.55">Moderata</option>
+<option value="1.70">Alta — lavoro attivo + molti passi</option>
+<option value="1.80">Molto alta — lavoro fisico intenso</option>
+</select>
+<label>Deficit desiderato (kcal)</label><input id="deficitGoal" type="number" placeholder="800">
+<div class="card" style="background:#f9fafb;margin-top:8px">
+<div class="row"><span>Metabolismo basale</span><b id="bmrPreview">—</b></div>
+<div class="row"><span>Consumo totale stimato</span><b id="tdeePreview">—</b></div>
+<div class="row"><span>Target dimagrimento</span><b id="targetPreview">—</b></div>
+</div>
+<button onclick="saveSettings()">Salva profilo</button>
+<p class="muted">Il consumo è una stima: viene ricalibrato in base al peso e ai tuoi dati. Il TDEE include già l'attività abituale, quindi le calorie dell'allenamento non vengono sommate una seconda volta.</p>
+</div>
+</section>
+</div>
+
+<nav>
+<button onclick="show('home')">🏠 Home</button>
+<button onclick="show('food')">🍽️ Cibo</button>
+<button onclick="show('workout')">🏋️ Allenamento</button>
+<button onclick="show('weightSec')">⚖️ Peso</button>
+<button onclick="show('settings')">⚙️</button>
+</nav>
+
+<script>
+const today=()=>new Date().toISOString().slice(0,10);
+// Valori medi per 100 g: stime utili quando non è disponibile una scheda prodotto online.
+const localFoods={
+ 'pasta secca':{cal:353,pro:13,carb:72,fat:1.5},
+ 'pasta cotta':{cal:158,pro:5.8,carb:30.9,fat:0.9},
+ 'riso secco':{cal:360,pro:7,fat:0.7,carb:80},
+ 'riso cotto':{cal:130,pro:2.7,carb:28,fat:0.3},
+ 'petto di pollo':{cal:120,pro:22.5,carb:0,fat:2.6},
+ 'pollo cotto':{cal:165,pro:31,carb:0,fat:3.6},
+ 'uovo':{cal:143,pro:12.6,carb:0.7,fat:9.5},
+ 'pane':{cal:265,pro:9,carb:49,fat:3.2},
+ 'pane integrale':{cal:247,pro:13,carb:41,fat:4.2},
+ 'banana':{cal:89,pro:1.1,carb:22.8,fat:0.3},
+ 'mela':{cal:52,pro:0.3,carb:13.8,fat:0.2},
+ 'yogurt bianco':{cal:61,pro:3.5,carb:4.7,fat:3.3},
+ 'yogurt greco 0%':{cal:59,pro:10.3,carb:3.6,fat:0.4},
+ 'latte parzialmente scremato':{cal:46,pro:3.3,carb:4.8,fat:1.6},
+ 'fiocchi avena':{cal:372,pro:13.5,carb:58.7,fat:7},
+ 'tonno al naturale sgocciolato':{cal:116,pro:25.5,carb:0,fat:1},
+ 'tonno sott’olio sgocciolato':{cal:198,pro:29,carb:0,fat:8},
+ 'patate':{cal:77,pro:2,carb:17,fat:0.1},
+ 'patate al forno':{cal:149,pro:2.5,carb:26,fat:4},
+ 'olio oliva':{cal:884,pro:0,carb:0,fat:100},
+ 'mandorle':{cal:579,pro:21.2,carb:21.6,fat:49.9},
+ 'parmigiano':{cal:402,pro:32,carb:0,fat:30},
+ 'mozzarella':{cal:250,pro:18,carb:2,fat:19},
+ 'manzo magro':{cal:170,pro:26,carb:0,fat:7},
+ 'salmone':{cal:208,pro:20,carb:0,fat:13},
+ 'ceci cotti':{cal:164,pro:8.9,carb:27.4,fat:2.6},
+ 'lenticchie cotte':{cal:116,pro:9,carb:20.1,fat:0.4},
+ 'piselli':{cal:81,pro:5.4,carb:14.5,fat:0.4},
+ 'granola':{cal:450,pro:10,carb:64,fat:16},
+ 'biscotti secchi':{cal:430,pro:7,carb:74,fat:12},
+ 'pizza margherita':{cal:266,pro:11,carb:33,fat:10},
+ 'crêpe':{cal:220,pro:7,carb:28,fat:8}
+};
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+function scaleNutrition(n, grams){const f=(Number(grams)||0)/100;return {cal:Math.round(n.cal*f),pro:Math.round(n.pro*f*10)/10,carb:Math.round(n.carb*f*10)/10,fat:Math.round(n.fat*f*10)/10};}
+function setNutrition(n, source){const q=Number(foodQty.value)||100;const v=scaleNutrition(n,q);foodCal.value=v.cal;foodPro.value=v.pro;foodCarb.value=v.carb;foodFat.value=v.fat;nutritionStatus.textContent=`Stima per ${q} g: ${v.cal} kcal · Proteine ${v.pro} g · Carboidrati ${v.carb} g · Grassi ${v.fat} g (${source}).`;}
+function findLocalFood(name){const key=norm(name);if(!key)return null;if(localFoods[key])return [key,localFoods[key]];const matches=Object.entries(localFoods).filter(([k])=>k.includes(key)||key.includes(k));return matches.length===1?matches[0]:null;}
+let foodSearchTimer=null, foodSearchToken=0, selectedNutrition=null;
+function updateFoodNutrition(){if(selectedNutrition){setNutrition(selectedNutrition.n,selectedNutrition.source);return;}const found=findLocalFood(foodName.value);if(found){selectedNutrition={n:found[1],source:'valori medi per 100 g'};setNutrition(found[1],selectedNutrition.source);return;}nutritionStatus.textContent='Alimento non trovato nella lista rapida. Provo a cercarlo online oppure puoi inserire i valori manualmente.';}
+async function searchFoodOnline(query){const token=++foodSearchToken;const box=document.getElementById('foodSuggestions');if(query.trim().length<3){box.style.display='none';return;}box.innerHTML='<button type="button">Ricerca in corso…</button>';box.style.display='block';try{const url='https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(query)+'&search_simple=1&action=process&json=1&page_size=7&fields=product_name,brands,nutriments';const res=await fetch(url);if(!res.ok)throw new Error('Ricerca non disponibile');const json=await res.json();if(token!==foodSearchToken)return;const products=(json.products||[]).filter(x=>{const nu=x.nutriments||{};return !!x.product_name&&Number.isFinite(Number(nu['energy-kcal_100g']))&&Number(nu['energy-kcal_100g'])>0;}).slice(0,7);if(!products.length){box.innerHTML='<button type="button">Nessun risultato online. Prova un nome più preciso.</button>';return;}box.innerHTML='';products.forEach(prod=>{const nu=prod.nutriments||{};let cal=Number(nu['energy-kcal_100g']);if(!Number.isFinite(cal))cal=Number(nu['energy-kcal_value']);if(!Number.isFinite(cal)&&Number.isFinite(Number(nu.energy_100g)))cal=Number(nu.energy_100g)/4.184;const n={cal:Math.max(0,cal||0),pro:Number(nu.proteins_100g)||0,carb:Number(nu.carbohydrates_100g)||0,fat:Number(nu.fat_100g)||0};const label=prod.product_name+(prod.brands?' — '+prod.brands:'');const b=document.createElement('button');b.type='button';b.textContent=`${label} (${Math.round(n.cal)} kcal/100 g)`;b.onclick=()=>{foodName.value=prod.product_name;selectedNutrition={n,source:'Open Food Facts · per 100 g'};setNutrition(n,selectedNutrition.source);box.style.display='none';};box.appendChild(b);});}catch(e){if(token!==foodSearchToken)return;box.innerHTML='<button type="button">Ricerca online non disponibile. Puoi usare i valori medi o inserirli manualmente.</button>';}}
+function onFoodNameInput(){selectedNutrition=null;updateFoodNutrition();clearTimeout(foodSearchTimer);foodSearchTimer=setTimeout(()=>searchFoodOnline(foodName.value),450);}
+
+let data=JSON.parse(localStorage.getItem('fitnessData')||'{"foods":[],"workouts":[],"weights":[],"target":2700,"profile":{"age":22,"sex":"male","height":180,"weight":114,"steps":10000,"trainingDays":6,"activity":1.70,"deficitGoal":800}}');
+if(!data.profile)data.profile={age:22,sex:'male',height:180,weight:114,steps:10000,trainingDays:6,activity:1.70,deficitGoal:800};
+function getWeight(){return data.weights.length?data.weights[data.weights.length-1].weight:Number(data.profile.weight)||114;}
+function calcBMR(){const p=data.profile,w=getWeight(),age=Number(p.age)||22,h=Number(p.height)||180;return p.sex==='female' ? 10*w+6.25*h-5*age-161 : 10*w+6.25*h-5*age+5;}
+function calcTDEE(){return calcBMR()*(Number(data.profile.activity)||1.70);}
+function updatePreviews(){const b=Math.round(calcBMR()),t=Math.round(calcTDEE()),goal=Math.max(1200,t-(Number(data.profile.deficitGoal)||800));bmrPreview.textContent=b+' kcal';tdeePreview.textContent=t+' kcal';targetPreview.textContent=goal+' kcal';}
+function saveSettings(){data.profile={age:+age.value||22,sex:sex.value,height:+height.value||180,weight:+profileWeight.value||getWeight(),steps:+steps.value||10000,trainingDays:+trainingDays.value||0,activity:+activity.value||1.70,deficitGoal:+deficitGoal.value||800};data.target=Math.round(Math.max(1200,calcTDEE()-data.profile.deficitGoal));save();}
+
+function save(){localStorage.setItem('fitnessData',JSON.stringify(data));render();}
+function show(id){document.querySelectorAll('section').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');render();}
+function addFood(){
+let n=foodName.value.trim(); if(!n)return;
+if(selectedNutrition)setNutrition(selectedNutrition.n,selectedNutrition.source);
+data.foods.push({date:today(),name:n,qty:+foodQty.value||0,cal:+foodCal.value||0,pro:+foodPro.value||0,carb:+foodCarb.value||0,fat:+foodFat.value||0});
+['foodName','foodQty','foodCal','foodPro','foodCarb','foodFat'].forEach(x=>document.getElementById(x).value='');foodQty.value=100;selectedNutrition=null;foodSuggestions.style.display='none';nutritionStatus.textContent='Inserisci un alimento per calcolare calorie e macronutrienti.';save();
+}
+function addWorkout(){
+let n=workType.value.trim();if(!n)return;
+data.workouts.push({date:today(),name:n,min:+workMin.value||0,cal:+workCal.value||0});workType.value='';workMin.value='';workCal.value='';save();
+}
+function addWeight(){let w=+newWeight.value;if(!w)return;data.weights.push({date:today(),weight:w});newWeight.value='';save();}
+function render(){
+let foods=data.foods.filter(x=>x.date===today()), works=data.workouts.filter(x=>x.date===today());
+let cal=foods.reduce((s,x)=>s+x.cal,0), pro=foods.reduce((s,x)=>s+x.pro,0), burned=works.reduce((s,x)=>s+x.cal,0);
+let tdee=Math.round(calcTDEE());
+weight.textContent=(data.weights.at(-1)?.weight??data.profile.weight??'—')+(data.weights.length||data.profile.weight?' kg':'');
+tdee.textContent=tdee+' kcal';
+calories.textContent=Math.round(cal);protein.textContent=Math.round(pro)+' g';target.textContent=data.target+' kcal';
+let d=tdee-cal;deficit.textContent=(d>=0?d+' kcal':Math.abs(d)+' kcal');deficit.className='big '+(d>=0?'green':'red');deficitInfo.textContent=d>=0?'sotto il consumo stimato':'sopra il consumo stimato';
+calbar.style.width=Math.min(100,cal/data.target*100)+'%';caltext.textContent=`${Math.round(cal)} / ${data.target} kcal`;
+todayList.innerHTML=[...foods.map(x=>`<div class="item">🍴 ${x.name} — ${x.qty} g · ${x.cal} kcal</div>`),...works.map(x=>`<div class="item">🏋️ ${x.name} — ${x.min} min · -${x.cal} kcal</div>`)].join('')||'Nessun dato inserito.';
+foodList.innerHTML=foods.map(x=>`<div class="item"><b>${x.name}</b><br><span class="muted">${x.qty} g · ${x.cal} kcal · P ${x.pro}g · C ${x.carb}g · G ${x.fat}g</span></div>`).join('')||'<span class="muted">Nessun alimento.</span>';
+workoutList.innerHTML=works.map(x=>`<div class="item"><b>${x.name}</b><br><span class="muted">${x.min} min · ${x.cal} kcal</span></div>`).join('')||'<span class="muted">Nessun allenamento.</span>';
+let rev=[...data.weights].reverse();weightsList.innerHTML=rev.slice(0,5).map(x=>`<div class="item">${x.date} <b>${x.weight} kg</b></div>`).join('')||'Nessuna pesata.';
+allWeights.innerHTML=rev.map(x=>`<div class="item">${x.date} <b>${x.weight} kg</b></div>`).join('')||'Nessuna pesata.';
+age.value=data.profile.age;sex.value=data.profile.sex;height.value=data.profile.height;profileWeight.value=getWeight();steps.value=data.profile.steps;trainingDays.value=data.profile.trainingDays;activity.value=data.profile.activity;deficitGoal.value=data.profile.deficitGoal;updatePreviews();
+}
+render();
+foodName.addEventListener('input',onFoodNameInput);
+foodQty.addEventListener('input',()=>{if(selectedNutrition)setNutrition(selectedNutrition.n,selectedNutrition.source);else updateFoodNutrition();});
+['foodCal','foodPro','foodCarb','foodFat'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{selectedNutrition=null;nutritionStatus.textContent='Valori modificati manualmente.';}));
+</script>
+</body></html>
